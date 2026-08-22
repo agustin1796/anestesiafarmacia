@@ -1,6 +1,15 @@
 ﻿<!DOCTYPE html>
 <html lang="es" class="h-full bg-slate-100">
 <head>
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0284c7">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Opioides HCM">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <link rel="icon" type="image/png" href="/static/icon-192.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control de Opioides - Hospital Central de Mendoza</title>
@@ -575,5 +584,14 @@
   </div>
 
   <script src="/static/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then(reg => console.log('Service Worker PWA cargado con exito'))
+          .catch(err => console.log('Error en Service Worker:', err));
+      });
+    }
+  </script>
 </body>
 </html>
