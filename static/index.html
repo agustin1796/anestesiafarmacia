@@ -588,6 +588,30 @@
     <span id="toastMsg">Mensaje del sistema</span>
   </div>
 
+    <!-- Banner Guiado de Instalacion para iPhone / iPad (iOS) -->
+  <div id="iosInstallBanner" class="hidden fixed bottom-4 left-3 right-3 sm:left-auto sm:right-4 sm:max-w-sm bg-slate-900/95 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl border border-slate-700 z-50">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="/static/icon-192.png" class="w-10 h-10 rounded-xl shadow-md border border-slate-700" alt="App Icon">
+        <div>
+          <div class="text-xs font-black text-white">Instalar App Opioides HCM</div>
+          <div class="text-[11px] text-sky-300">Uso rapido en tu iPhone/iPad</div>
+        </div>
+      </div>
+      <button onclick="dismissIosBanner()" class="text-slate-400 hover:text-white p-1 text-sm font-bold">✕</button>
+    </div>
+    <div class="mt-3 text-[11px] text-slate-300 border-t border-slate-800 pt-2.5 space-y-1.5">
+      <div class="flex items-center gap-2">
+        <span class="w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center font-black text-[9px]">1</span>
+        <span>Toca el boton <strong>Compartir</strong> (icono de cuadrado con flecha abajo)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center font-black text-[9px]">2</span>
+        <span>Elige <strong>"Agregar a inicio"</strong> ➕</span>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

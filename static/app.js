@@ -6,6 +6,7 @@ let medsGlobal = [];
 let recuentoGlobal = [];
 
 document.addEventListener("DOMContentLoaded", () => {
+  checkIosPrompt();
   if (window.lucide) {
     lucide.createIcons();
   }
@@ -795,4 +796,22 @@ function setupEvents() {
       } catch(e){ showToast("Error de conexion", true); }
     });
   }
+}
+function checkIosPrompt() {
+  const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed = localStorage.getItem('hcm_ios_dismissed');
+
+  if (isIos && !isStandalone && !dismissed) {
+    setTimeout(() => {
+      const banner = document.getElementById('iosInstallBanner');
+      if (banner) banner.classList.remove('hidden');
+    }, 1500);
+  }
+}
+
+function dismissIosBanner() {
+  const banner = document.getElementById('iosInstallBanner');
+  if (banner) banner.classList.add('hidden');
+  localStorage.setItem('hcm_ios_dismissed', 'true');
 }
