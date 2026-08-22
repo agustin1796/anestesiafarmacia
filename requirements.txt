@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.4
+python-jose==3.5.0
+python-multipart==0.0.32
+reportlab==5.0.1
+passlib==1.7.4
+bcrypt==5.0.0
+gunicorn==22.0.0
