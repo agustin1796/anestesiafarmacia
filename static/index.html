@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <link rel="icon" type="image/png" href="/static/icon-192.png">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Control de Opioides - Hospital Central de Mendoza</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -67,7 +67,7 @@
   <div id="mainView" class="hidden min-h-screen flex flex-col">
     <!-- Barra Superior -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex items-center justify-between gap-2">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center text-white shadow-md shadow-sky-600/20">
             <i data-lucide="shield-check" class="w-6 h-6"></i>
@@ -99,8 +99,8 @@
       </div>
 
       <!-- Barra de Pestanas -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between border-t border-slate-100 flex-wrap gap-2 py-1 sm:py-0">
-        <nav class="flex space-x-2 py-2">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 py-1.5">
+        <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto py-1 text-xs no-scrollbar">
           <button id="tabBtnCuaderno" onclick="showTab('cuaderno')" class="px-4 py-2 text-xs font-bold rounded-xl border-b-2 text-sky-600 border-sky-600 flex items-center gap-2 transition">
             <i data-lucide="book-open" class="w-4 h-4"></i>
             <span>Cuaderno de Registros</span>
@@ -119,13 +119,13 @@
           </button>
         </nav>
 
-        <div class="flex items-center gap-2 py-1.5">
-          <button id="btnAnotarDev" onclick="abrirModalAnotar('devolucion')" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-600/20 flex items-center gap-1.5 transition">
+        <div class="grid grid-cols-2 sm:flex items-center gap-2 pb-1 sm:pb-0">
+          <button id="btnAnotarDev" onclick="abrirModalAnotar('devolucion')" class="w-full sm:w-auto px-2.5 sm:px-3.5 py-2 text-[11px] sm:text-xs bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-600/20 flex items-center gap-1.5 transition">
             <i data-lucide="undo-2" class="w-4 h-4"></i>
             <span>+ Devolucion de Medicacion</span>
           </button>
 
-          <button id="btnAnotarUso" onclick="abrirModalAnotar('uso')" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-600/20 flex items-center gap-1.5 transition">
+          <button id="btnAnotarUso" onclick="abrirModalAnotar('uso')" class="w-full sm:w-auto px-3 sm:px-4 py-2 text-[11px] sm:text-xs bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-600/20 flex items-center gap-1.5 transition">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>+ Anotar Paciente</span>
           </button>
@@ -133,7 +133,7 @@
       </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8">
       
       <!-- PESTANA 1: CUADERNO -->
       <section id="tabCuaderno" class="space-y-4">
@@ -162,7 +162,12 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <!-- Vista Movil: Tarjetas Nativas para Celular (< 768px) -->
+        <div id="registrosMobileCards" class="block md:hidden space-y-2.5">
+        </div>
+
+        <!-- Tabla Desktop (>= 768px) -->
+        <div class="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>

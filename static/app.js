@@ -216,10 +216,14 @@ async function loadRegistros() {
     registrosGlobal = await r.json();
     
     let tb = document.getElementById("registrosTbody");
-    if (!tb) return;
-    tb.innerHTML = "";
+    let mobileCards = document.getElementById("registrosMobileCards");
+    
+    if (tb) tb.innerHTML = "";
+    if (mobileCards) mobileCards.innerHTML = "";
+    
     if(!registrosGlobal.length) {
-      tb.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">No hay registros asentados</td></tr>';
+      if (tb) tb.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold">No hay registros asentados</td></tr>';
+      if (mobileCards) mobileCards.innerHTML = '<div class="bg-white p-6 rounded-2xl text-center text-slate-400 font-bold text-xs border border-slate-200">No hay registros asentados</div>';
       return;
     }
 
@@ -227,7 +231,7 @@ async function loadRegistros() {
     let isFarmacia = currentUser && (currentUser.rol === "farmacia" || isAdmin);
 
     registrosGlobal.forEach(rg => {
-      let f_date = new Date(rg.fecha_hora).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      let f_date = new Date(rg.fecha_hora).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
       
       let isDevolucion = rg.tipo === "devolucion";
       let rowBgClass = isDevolucion 
@@ -236,41 +240,87 @@ async function loadRegistros() {
 
       let tipoBadge = isDevolucion
         ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-200 text-rose-800 border border-rose-300 uppercase">Devolucion</span>`
-        : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">Uso Paciente</span>`;
+        : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">Uso</span>`;
 
       let farmHTML = "";
+      let farmMobileHTML = "";
       if (rg.control_farmacia === 1) {
         farmHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Aprobado: ${rg.farmaceutico_nombre || 'Farmacia'}</span>`;
+        farmMobileHTML = `<span class="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Aprobado</span>`;
       } else if (rg.control_farmacia === 2) {
         farmHTML = `<div class="inline-flex flex-col items-center">
           <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-200 text-rose-900 border border-rose-300">Rechazado</span>
           <span class="text-[9px] text-rose-700 font-semibold italic mt-0.5" title="${rg.motivo_rechazo}">Motivo: ${rg.motivo_rechazo}</span>
         </div>`;
+        farmMobileHTML = `<span class="text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"><i data-lucide="x" class="w-3 h-3"></i> Rechazado</span>`;
       } else {
         farmHTML = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pendiente</span>`;
+        farmMobileHTML = `<span class="text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Pendiente</span>`;
       }
       
       let acts = "";
+      let mobileActs = "";
       if(rg.control_farmacia === 0 && isFarmacia) {
         acts += `<button onclick="promptControl(${rg.id})" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded-lg mr-1.5 font-bold text-xs shadow-sm transition">Controlar</button>`;
+        mobileActs += `<button onclick="promptControl(${rg.id})" class="flex-1 py-1.5 bg-teal-600 active:bg-teal-700 text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Controlar</button>`;
       }
       if(isAdmin) {
         acts += `<button onclick="borrarRegistro(${rg.id})" title="Eliminar registro (Superadmin)" class="px-2 py-1 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg text-xs font-bold border border-rose-300 transition">Borrar</button>`;
+        mobileActs += `<button onclick="borrarRegistro(${rg.id})" class="px-3 py-1.5 bg-rose-50 text-rose-700 active:bg-rose-100 rounded-xl text-xs font-bold border border-rose-200 flex items-center justify-center gap-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Borrar</button>`;
       }
 
-      tb.innerHTML += `
-        <tr class="${rowBgClass} transition-colors">
-          <td class="p-3.5 font-mono text-slate-400 font-bold">#${rg.id}</td>
-          <td class="p-3.5 text-slate-600 font-mono text-[11px]">${f_date}</td>
-          <td class="p-3.5">${tipoBadge}</td>
-          <td class="p-3.5 font-bold ${isDevolucion ? 'text-rose-950' : 'text-slate-900'}">${rg.paciente_nombre}</td>
-          <td class="p-3.5 font-bold ${isDevolucion ? 'text-rose-800' : 'text-sky-900'}">${rg.medicamento_nombre}</td>
-          <td class="p-3.5 text-center font-black ${isDevolucion ? 'text-rose-700 bg-rose-100/50' : 'text-slate-900 bg-slate-50/50'}">${isDevolucion ? '-' + rg.cantidad_usada : rg.cantidad_usada}</td>
-          <td class="p-3.5 text-slate-700 text-xs font-semibold">${rg.tecnico_nombre}</td>
-          <td class="p-3.5 text-center">${farmHTML}</td>
-          <td class="p-3.5 text-right whitespace-nowrap">${acts}</td>
-        </tr>
-      `;
+      // 1. Desktop Table Row
+      if (tb) {
+        tb.innerHTML += `
+          <tr class="${rowBgClass} transition-colors">
+            <td class="p-3.5 font-mono text-slate-400 font-bold">#${rg.id}</td>
+            <td class="p-3.5 text-slate-600 font-mono text-[11px]">${f_date}</td>
+            <td class="p-3.5">${tipoBadge}</td>
+            <td class="p-3.5 font-bold ${isDevolucion ? 'text-rose-950' : 'text-slate-900'}">${rg.paciente_nombre}</td>
+            <td class="p-3.5 font-bold ${isDevolucion ? 'text-rose-800' : 'text-sky-900'}">${rg.medicamento_nombre}</td>
+            <td class="p-3.5 text-center font-black ${isDevolucion ? 'text-rose-700 bg-rose-100/50' : 'text-slate-900 bg-slate-50/50'}">${isDevolucion ? '-' + rg.cantidad_usada : rg.cantidad_usada}</td>
+            <td class="p-3.5 text-slate-700 text-xs font-semibold">${rg.tecnico_nombre}</td>
+            <td class="p-3.5 text-center">${farmHTML}</td>
+            <td class="p-3.5 text-right whitespace-nowrap">${acts}</td>
+          </tr>
+        `;
+      }
+
+      // 2. Mobile Responsive Card
+      if (mobileCards) {
+        let cardBg = isDevolucion ? "bg-rose-50/60 border-rose-200 text-rose-950" : "bg-white border-slate-200 text-slate-900";
+        mobileCards.innerHTML += `
+          <div class="${cardBg} p-3.5 rounded-2xl border shadow-xs space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-mono font-bold text-slate-400">#${rg.id}</span>
+                ${tipoBadge}
+              </div>
+              <span class="text-[10px] font-mono text-slate-400 font-semibold">${f_date}</span>
+            </div>
+
+            <div>
+              <div class="text-xs font-black leading-snug">${rg.paciente_nombre}</div>
+              <div class="text-[11px] font-bold ${isDevolucion ? 'text-rose-700' : 'text-sky-700'} mt-0.5">${rg.medicamento_nombre}</div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 text-[10px]">Cantidad:</span>
+                <span class="font-black px-2 py-0.5 rounded-lg ${isDevolucion ? 'bg-rose-100 text-rose-800' : 'bg-sky-50 text-sky-800 font-mono'} text-xs">${isDevolucion ? '-' + rg.cantidad_usada : rg.cantidad_usada}</span>
+              </div>
+              <div>${farmMobileHTML}</div>
+            </div>
+
+            <div class="text-[10px] text-slate-500 font-semibold flex items-center justify-between">
+              <span>Por: <strong>${rg.tecnico_nombre}</strong></span>
+              ${rg.motivo_rechazo ? `<span class="text-rose-600 italic">Rechazo: ${rg.motivo_rechazo}</span>` : ''}
+            </div>
+
+            ${mobileActs ? `<div class="flex items-center gap-2 pt-2 border-t border-slate-100">${mobileActs}</div>` : ''}
+          </div>
+        `;
+      }
     });
     if (window.lucide) lucide.createIcons();
   } catch(e) {}
