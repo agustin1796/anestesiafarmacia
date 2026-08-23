@@ -144,7 +144,7 @@ function setupApp() {
   const isFarmacia = currentUser.rol === "farmacia";
 
   if (tabAdminEl) tabAdminEl.classList.toggle("hidden", !isAdmin);
-  if (btnStockAdminEl) btnStockAdminEl.classList.toggle("hidden", !isAdmin);
+  if (btnStockAdminEl) btnStockAdminEl.classList.toggle("hidden", !(isAdmin || isFarmacia));
 
   // Ocultar botones de solicitud y devolucion para rol farmacia
   if (btnAnotarUsoEl) btnAnotarUsoEl.classList.toggle("hidden", isFarmacia);
@@ -458,14 +458,16 @@ async function loadStock() {
     if (!c) return;
     c.innerHTML = "";
     let isAdmin = currentUser && currentUser.rol === "admin";
+    let isFarmacia = currentUser && currentUser.rol === "farmacia";
+    let canManageStock = isAdmin || isFarmacia;
     
     medsGlobal.forEach(m => {
       let bts = "";
-      if(isAdmin) {
-        bts = `
-          <button onclick="cambiarStock(${m.id}, '${m.nombre}', ${m.stock_actual})" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-bold text-slate-700 transition">Modificar</button>
-          <button onclick="borrarMed(${m.id})" title="Borrar Medicamento" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-2.5 py-1.5 rounded-xl font-bold transition">Eliminar</button>
-        `;
+      if(canManageStock) {
+        bts = `<button onclick="cambiarStock(${m.id}, '${m.nombre}', ${m.stock_actual})" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl font-bold text-slate-700 transition">Modificar</button>`;
+        if (isAdmin) {
+          bts += `<button onclick="borrarMed(${m.id})" title="Borrar Medicamento" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-2.5 py-1.5 rounded-xl font-bold transition">Eliminar</button>`;
+        }
       }
       
       c.innerHTML += `
