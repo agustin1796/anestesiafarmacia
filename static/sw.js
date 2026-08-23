@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opioides-hcm-v1';
+const CACHE_NAME = 'opioides-hcm-v3';
 const ASSETS = [
   '/',
   '/static/styles.css',
@@ -30,7 +30,12 @@ self.addEventListener('fetch', (e) => {
   if (e.request.url.includes('/api/')) {
     return; // Peticiones a la API siempre van a la red
   }
+  // Network-first: intenta red, si falla usa cache (evita JS viejo)
   e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
+    fetch(e.request).then((res) => {
+      const clone = res.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });

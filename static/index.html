@@ -624,11 +624,11 @@
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=3"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/sw.js')
+        navigator.serviceWorker.register('/static/sw.js?v=3')
           .then(reg => console.log('Service Worker PWA cargado con exito'))
           .catch(err => console.log('Error en Service Worker:', err));
       });

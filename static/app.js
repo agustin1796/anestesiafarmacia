@@ -3,6 +3,20 @@ let currentUser = null;
 let token = localStorage.getItem("hcm_token") || null;
 let registrosGlobal = [];
 let medsGlobal = [];
+
+function rolUsuario() {
+  return (currentUser && currentUser.rol ? String(currentUser.rol) : "").trim().toLowerCase();
+}
+function esAdmin() {
+  return rolUsuario() === "admin";
+}
+function esFarmacia() {
+  const r = rolUsuario();
+  return r === "farmacia" || r === "farmaceutico" || r === "farmacéutico" || r.includes("farmac");
+}
+function puedeGestionarStock() {
+  return esAdmin() || esFarmacia();
+}
 let recuentoGlobal = [];
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -140,11 +154,11 @@ function setupApp() {
   if (nombreEl) nombreEl.innerText = currentUser.nombre_completo;
   if (rolEl) rolEl.innerText = currentUser.rol.toUpperCase();
   
-  const isAdmin = currentUser.rol === "admin";
-  const isFarmacia = currentUser.rol === "farmacia";
+  const isAdmin = esAdmin();
+  const isFarmacia = esFarmacia();
 
   if (tabAdminEl) tabAdminEl.classList.toggle("hidden", !isAdmin);
-  if (btnStockAdminEl) btnStockAdminEl.classList.toggle("hidden", !(isAdmin || isFarmacia));
+  if (btnStockAdminEl) btnStockAdminEl.classList.toggle("hidden", !puedeGestionarStock());
 
   // Ocultar botones de solicitud y devolucion para rol farmacia
   if (btnAnotarUsoEl) btnAnotarUsoEl.classList.toggle("hidden", isFarmacia);
@@ -457,9 +471,9 @@ async function loadStock() {
     let c = document.getElementById("medsContainer");
     if (!c) return;
     c.innerHTML = "";
-    let isAdmin = currentUser && currentUser.rol === "admin";
-    let isFarmacia = currentUser && currentUser.rol === "farmacia";
-    let canManageStock = isAdmin || isFarmacia;
+    let isAdmin = esAdmin();
+    let isFarmacia = esFarmacia();
+    let canManageStock = puedeGestionarStock();
     
     medsGlobal.forEach(m => {
       let bts = "";
