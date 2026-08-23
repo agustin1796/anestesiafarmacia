@@ -225,33 +225,47 @@ def init_postgres_db():
     conn.close()
 
 def insert_default_data(conn, cursor, is_pg=False):
-    meds = [
-        ("Fentanilo (ampollas 0.5mg / 10ml)", 150),
-        ("Remifentanilo (frascos 2mg)", 120),
-        ("Remifentanilo (frascos 5mg)", 60),
-        ("Morfina 1% (ampollas 10mg / 1ml)", 100),
-        ("Ketamina 50mg/ml (frasco 10ml)", 80),
-        ("Sufentanilo (ampollas 50mcg / 5ml)", 50),
-        ("Dilucion Fentanilo (100mcg en 100ml Sol. Fisiologica)", 40),
-        ("Dilucion Remifentanilo (2mg en 100ml Sol. Fisiologica)", 40),
-        ("Solucion Fisiologica 0.9% 100ml (Vehiculo)", 200)
-    ]
-    for med in meds:
-        if is_pg:
-            cursor.execute("INSERT INTO medicamentos (nombre, stock_actual) VALUES (?, ?) ON CONFLICT (nombre) DO NOTHING", med)
-        else:
-            cursor.execute("INSERT OR IGNORE INTO medicamentos (nombre, stock_actual) VALUES (?, ?)", med)
+    # Verificar si ya existen medicamentos cargados
+    cursor.execute("SELECT COUNT(*) as total FROM medicamentos")
+    row_meds = cursor.fetchone()
+    total_meds = row_meds["total"] if isinstance(row_meds, dict) else (row_meds[0] if row_meds else 0)
 
-    usuarios_base = [
-        ("admin", "Super Administrador HCM", hash_password("admin123"), "admin"),
-        ("tecnico", "Tecnico Anestesia HCM", hash_password("tecnico123"), "tecnico"),
-        ("farmacia", "Farmacia Central HCM", hash_password("farmacia123"), "farmacia"),
-    ]
-    for u in usuarios_base:
-        if is_pg:
-            cursor.execute("INSERT INTO usuarios (username, nombre_completo, password_hash, rol) VALUES (?, ?, ?, ?) ON CONFLICT (username) DO NOTHING", u)
-        else:
-            cursor.execute("INSERT OR IGNORE INTO usuarios (username, nombre_completo, password_hash, rol) VALUES (?, ?, ?, ?)", u)
+    # Solo insertar medicamentos por defecto si la base de datos es 100% nueva
+    # Si el administrador borro algun medicamento, no se reinserta
+    if total_meds == 0:
+        meds = [
+            ("Fentanilo (ampollas 0.5mg / 10ml)", 150),
+            ("Remifentanilo (frascos 2mg)", 120),
+            ("Remifentanilo (frascos 5mg)", 60),
+            ("Morfina 1% (ampollas 10mg / 1ml)", 100),
+            ("Ketamina 50mg/ml (frasco 10ml)", 80),
+            ("Sufentanilo (ampollas 50mcg / 5ml)", 50),
+            ("Dilucion Fentanilo (100mcg en 100ml Sol. Fisiologica)", 40),
+            ("Dilucion Remifentanilo (2mg en 100ml Sol. Fisiologica)", 40),
+            ("Solucion Fisiologica 0.9% 100ml (Vehiculo)", 200)
+        ]
+        for med in meds:
+            if is_pg:
+                cursor.execute("INSERT INTO medicamentos (nombre, stock_actual) VALUES (?, ?) ON CONFLICT (nombre) DO NOTHING", med)
+            else:
+                cursor.execute("INSERT OR IGNORE INTO medicamentos (nombre, stock_actual) VALUES (?, ?)", med)
+
+    # Verificar si ya existen usuarios
+    cursor.execute("SELECT COUNT(*) as total FROM usuarios")
+    row_users = cursor.fetchone()
+    total_users = row_users["total"] if isinstance(row_users, dict) else (row_users[0] if row_users else 0)
+
+    if total_users == 0:
+        usuarios_base = [
+            ("admin", "Super Administrador HCM", hash_password("admin123"), "admin"),
+            ("tecnico", "Tecnico Anestesia HCM", hash_password("tecnico123"), "tecnico"),
+            ("farmacia", "Farmacia Central HCM", hash_password("farmacia123"), "farmacia"),
+        ]
+        for u in usuarios_base:
+            if is_pg:
+                cursor.execute("INSERT INTO usuarios (username, nombre_completo, password_hash, rol) VALUES (?, ?, ?, ?) ON CONFLICT (username) DO NOTHING", u)
+            else:
+                cursor.execute("INSERT OR IGNORE INTO usuarios (username, nombre_completo, password_hash, rol) VALUES (?, ?, ?, ?)", u)
 
 if __name__ == "__main__":
     init_db()
