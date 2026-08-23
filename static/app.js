@@ -477,7 +477,7 @@ async function loadStock() {
           <div class="flex items-end justify-between pt-4 border-t border-slate-100">
             <div>
               <div class="text-3xl font-black ${m.stock_actual < 20 ? 'text-rose-600' : 'text-slate-900'}">${m.stock_actual}</div>
-              <div class="text-[11px] font-semibold text-slate-400">unidades disponibles</div>
+              <div class="text-[11px] font-semibold text-slate-400">unidades en Farmacia</div>
             </div>
             <div class="flex gap-1.5">${bts}</div>
           </div>
@@ -873,7 +873,7 @@ function exportarBalanceCSV() {
 
   let csv = `BALANCE DIARIO DE OPIOIDES - HOSPITAL CENTRAL DE MENDOZA\n`;
   csv += `Fecha de Rendicion:;${fechaStr}\n\n`;
-  csv += "Medicamento / Presentacion;Total Pedido Tecnicos;Total Devuelto Tecnicos;Consumo Neto Tecnicos;Despachado Farmacia;Diferencia (Farmacia - Neto);Stock Deposito Actual\n";
+  csv += "Medicamento / Presentacion;Total Pedido Tecnicos;Total Devuelto Tecnicos;Consumo Neto Tecnicos;Despachado Farmacia;Diferencia (Farmacia - Neto);Stock Farmacia\n";
 
   recuentoGlobal.forEach(m => {
     let med = (m.medicamento_nombre || "").replace(/;/g, ",");
@@ -963,7 +963,7 @@ function imprimirRendicionPDF() {
             <th>Consumo Neto Anestesia</th>
             <th>Despachado Farmacia</th>
             <th>Diferencia / Balance</th>
-            <th style="text-align: right;">Stock en Depósito</th>
+            <th style="text-align: right;">Stock Farmacia</th>
           </tr>
         </thead>
         <tbody>

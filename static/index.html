@@ -111,7 +111,7 @@
           </button>
           <button id="tabBtnStock" onclick="showTab('stock')" class="px-4 py-2 text-xs font-bold rounded-xl border-b-2 text-slate-500 border-transparent hover:text-slate-700 flex items-center gap-2 transition">
             <i data-lucide="boxes" class="w-4 h-4"></i>
-            <span>Stock de Deposito</span>
+            <span>Stock Farmacia Central</span>
           </button>
           <button id="tabBtnAdmin" onclick="showTab('admin')" class="hidden px-4 py-2 text-xs font-bold rounded-xl border-b-2 text-slate-500 border-transparent hover:text-purple-700 flex items-center gap-2 transition">
             <i data-lucide="shield-alert" class="w-4 h-4"></i>
@@ -294,7 +294,7 @@
                   <th class="p-3 text-center text-teal-800 font-bold">Despachado Farmacia</th>
                   <th class="p-3 text-center text-sky-800 font-bold">Consumo Neto Tecnicos</th>
                   <th class="p-3 text-center">Diferencia</th>
-                  <th class="p-3 text-right">Stock Deposito Actual</th>
+                  <th class="p-3 text-right">Stock Farmacia</th>
                 </tr>
               </thead>
               <tbody id="balanceConsolidadoTbody" class="divide-y divide-slate-100">
@@ -308,8 +308,8 @@
       <section id="tabStock" class="hidden space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <h2 class="text-lg font-black text-slate-900">Stock en Deposito HCM</h2>
-            <p class="text-xs text-slate-500">Existencias en tiempo real de ampollas, frascos y diluciones preparadas</p>
+            <h2 class="text-lg font-black text-slate-900">Stock en Farmacia Central HCM</h2>
+            <p class="text-xs text-slate-500">Inventario gestionado manualmente por Farmacia Central. Las anotaciones del cuaderno no alteran este valor.</p>
           </div>
           <button id="btnStockAdmin" onclick="openModal('modalNuevoMed')" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition">
             <i data-lucide="plus" class="w-4 h-4"></i>

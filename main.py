@@ -257,14 +257,6 @@ def anotar_paciente(reg: RegistroCreate, user: dict = Depends(get_current_user))
         conn.close()
         raise HTTPException(status_code=404, detail="Medicamento no encontrado")
 
-    if tipo_reg == "uso":
-        if med["stock_actual"] < reg.cantidad_usada:
-            conn.close()
-            raise HTTPException(status_code=400, detail=f"Stock insuficiente en deposito. Disponible: {med['stock_actual']}")
-        cursor.execute("UPDATE medicamentos SET stock_actual = stock_actual - ? WHERE id = ?", (reg.cantidad_usada, reg.medicamento_id))
-    else:
-        cursor.execute("UPDATE medicamentos SET stock_actual = stock_actual + ? WHERE id = ?", (reg.cantidad_usada, reg.medicamento_id))
-
     cursor.execute("""
         INSERT INTO registros_cuaderno (
             paciente_nombre, medicamento_id, cantidad_usada, tipo,
@@ -281,7 +273,7 @@ def anotar_paciente(reg: RegistroCreate, user: dict = Depends(get_current_user))
     conn.commit()
     conn.close()
 
-    msg = "Devolucion registrada y stock reintegrado al deposito" if tipo_reg == "devolucion" else "Anotacion guardada y stock descontado exitosamente"
+    msg = "Devolucion registrada correctamente en el cuaderno" if tipo_reg == "devolucion" else "Anotacion guardada correctamente en el cuaderno"
     return {"message": msg}
 
 @app.put("/api/registros/{reg_id}/aprobar")
@@ -481,12 +473,6 @@ def admin_borrar_registro(reg_id: int, reponer_stock: bool = True, admin: dict =
     if not reg:
         conn.close()
         raise HTTPException(status_code=404, detail="Registro no encontrado")
-    
-    if reponer_stock and reg["control_farmacia"] != 2:
-        if reg["tipo"] == "uso":
-            cursor.execute("UPDATE medicamentos SET stock_actual = stock_actual + ? WHERE id = ?", (reg["cantidad_usada"], reg["medicamento_id"]))
-        else:
-            cursor.execute("UPDATE medicamentos SET stock_actual = stock_actual - ? WHERE id = ?", (reg["cantidad_usada"], reg["medicamento_id"]))
     
     cursor.execute("DELETE FROM registros_cuaderno WHERE id = ?", (reg_id,))
     conn.commit()
