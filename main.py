@@ -16,6 +16,25 @@ ALGORITHM = "HS256"
 
 app = FastAPI(title="Control Opioides HCM - Trazabilidad y Seguridad", version="3.6.0")
 
+@app.get("/health")
+@app.get("/api/health")
+def health_check():
+    db_status = "ok"
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        conn.close()
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    return {
+        "status": "ok",
+        "service": "Control Opioides HCM",
+        "db": db_status,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -160,7 +179,7 @@ def get_medicamentos(user: dict = Depends(get_current_user)):
     return rows
 
 @app.post("/api/medicamentos")
-def crear_medicamento(m: MedicamentoCreate, admin: dict = Depends(require_admin)):
+def crear_medicamento(m: MedicamentoCreate, user: dict = Depends(require_farmacia_or_admin)):
     nombre_limpio = m.nombre.strip()
     if not nombre_limpio:
         raise HTTPException(status_code=400, detail="El nombre del medicamento es requerido")
@@ -170,14 +189,14 @@ def crear_medicamento(m: MedicamentoCreate, admin: dict = Depends(require_admin)
     try:
         cursor.execute("INSERT INTO medicamentos (nombre, stock_actual) VALUES (?, ?)", (nombre_limpio, max(0, m.stock_actual)))
         conn.commit()
-    except sqlite3.IntegrityError:
+    except Exception:
         conn.close()
-        raise HTTPException(status_code=400, detail="El medicamento o dilucion ya esta registrado")
+        raise HTTPException(status_code=400, detail="El medicamento o dilucion ya esta registrado o hubo un error")
     conn.close()
     return {"message": "Medicamento / Dilucion guardado correctamente en deposito"}
 
 @app.put("/api/medicamentos/{med_id}")
-def actualizar_stock(med_id: int, m: MedicamentoUpdate, admin: dict = Depends(require_admin)):
+def actualizar_stock(med_id: int, m: MedicamentoUpdate, user: dict = Depends(require_farmacia_or_admin)):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("UPDATE medicamentos SET stock_actual = ? WHERE id = ?", (max(0, m.stock_actual), med_id))

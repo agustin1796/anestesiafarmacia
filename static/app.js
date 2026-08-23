@@ -815,3 +815,180 @@ function dismissIosBanner() {
   if (banner) banner.classList.add('hidden');
   localStorage.setItem('hcm_ios_dismissed', 'true');
 }
+
+
+// ==========================================
+// EXPORTACION A EXCEL / CSV Y FORMATO PDF
+// ==========================================
+function descargarCSV(contenido, nombreArchivo) {
+  // BOM UTF-8 (﻿) para que Microsoft Excel abra las tildes y caracteres en español correctamente
+  const blob = new Blob(["﻿" + contenido], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", nombreArchivo);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportarCuadernoCSV() {
+  if (!registrosGlobal || registrosGlobal.length === 0) {
+    showToast("No hay registros en el cuaderno para exportar", true);
+    return;
+  }
+
+  let csv = "ID;Fecha y Hora;Tipo de Movimiento;Detalle / Paciente;Medicamento / Presentacion;Cantidad;Profesional Responsable;Control Farmacia;Farmaceutico Validador;Observaciones / Motivo\n";
+
+  registrosGlobal.forEach(r => {
+    let f_date = new Date(r.fecha_hora).toLocaleString('es-AR');
+    let tipoTxt = r.tipo === "devolucion" ? "DEVOLUCION A FARMACIA" : "USO EN PACIENTE";
+    let estadoControl = "PENDIENTE";
+    if (r.control_farmacia === 1) estadoControl = "CONFORMADO / APROBADO";
+    if (r.control_farmacia === 2) estadoControl = "RECHAZADO";
+
+    let obs = (r.motivo_rechazo || r.observaciones || "").replace(/;/g, ",").replace(/\n/g, " ");
+    let paciente = (r.paciente_nombre || "").replace(/;/g, ",");
+    let med = (r.medicamento_nombre || "").replace(/;/g, ",");
+    let tecnico = (r.tecnico_nombre || "").replace(/;/g, ",");
+    let farmaceutico = (r.farmaceutico_nombre || "").replace(/;/g, ",");
+
+    csv += `${r.id};"${f_date}";"${tipoTxt}";"${paciente}";"${med}";${r.cantidad_usada};"${tecnico}";"${estadoControl}";"${farmaceutico}";"${obs}"\n`;
+  });
+
+  let hoy = new Date().toISOString().split("T")[0];
+  descargarCSV(csv, `Cuaderno_Opioides_HCM_${hoy}.csv`);
+  showToast("Cuaderno exportado exitosamente a formato Excel/CSV");
+}
+
+function exportarBalanceCSV() {
+  if (!recuentoGlobal || recuentoGlobal.length === 0) {
+    showToast("No hay datos de balance para la fecha seleccionada", true);
+    return;
+  }
+
+  const fechaEl = document.getElementById("inputFechaRecuento");
+  const fechaStr = fechaEl ? fechaEl.value : new Date().toISOString().split("T")[0];
+
+  let csv = `BALANCE DIARIO DE OPIOIDES - HOSPITAL CENTRAL DE MENDOZA\n`;
+  csv += `Fecha de Rendicion:;${fechaStr}\n\n`;
+  csv += "Medicamento / Presentacion;Total Pedido Tecnicos;Total Devuelto Tecnicos;Consumo Neto Tecnicos;Despachado Farmacia;Diferencia (Farmacia - Neto);Stock Deposito Actual\n";
+
+  recuentoGlobal.forEach(m => {
+    let med = (m.medicamento_nombre || "").replace(/;/g, ",");
+    let diff = m.diferencia_balance || 0;
+    csv += `"${med}";${m.total_pedido_tecnico};${m.total_devuelto_tecnico};${m.recuento_neto_tecnicos};${m.cantidad_despachada_farmacia};${diff};${m.stock_deposito}\n`;
+  });
+
+  descargarCSV(csv, `Balance_Opioides_HCM_${fechaStr}.csv`);
+  showToast("Balance diario exportado a formato Excel/CSV");
+}
+
+function imprimirRendicionPDF() {
+  if (!recuentoGlobal || recuentoGlobal.length === 0) {
+    showToast("No hay balance diario para imprimir", true);
+    return;
+  }
+
+  const fechaEl = document.getElementById("inputFechaRecuento");
+  const fechaStr = fechaEl ? fechaEl.value : new Date().toISOString().split("T")[0];
+  const f_formateada = new Date(fechaStr + "T12:00:00").toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  let filasHTML = "";
+  recuentoGlobal.forEach((m, idx) => {
+    let diff = m.diferencia_balance || 0;
+    let diffColor = diff === 0 ? "color: #047857;" : "color: #b91c1c; font-weight: bold;";
+    let diffTxt = diff === 0 ? "0 (Balance Exacto)" : (diff > 0 ? `+${diff} (Sobrante Farmacia)` : `${diff} (Faltante)`);
+    
+    filasHTML += `
+      <tr style="border-bottom: 1px solid #e2e8f0; ${idx % 2 === 0 ? 'background-color: #f8fafc;' : ''}">
+        <td style="padding: 8px 10px; font-weight: bold; color: #1e293b;">${m.medicamento_nombre}</td>
+        <td style="padding: 8px 10px; text-align: center; color: #0369a1; font-weight: bold;">${m.total_pedido_tecnico}</td>
+        <td style="padding: 8px 10px; text-align: center; color: #e11d48; font-weight: bold;">${m.total_devuelto_tecnico > 0 ? '-' + m.total_devuelto_tecnico : '0'}</td>
+        <td style="padding: 8px 10px; text-align: center; font-weight: 800; color: #0f172a; background-color: #f1f5f9;">${m.recuento_neto_tecnicos}</td>
+        <td style="padding: 8px 10px; text-align: center; color: #0f766e; font-weight: 800;">${m.cantidad_despachada_farmacia}</td>
+        <td style="padding: 8px 10px; text-align: center; ${diffColor}">${diffTxt}</td>
+        <td style="padding: 8px 10px; text-align: right; font-weight: bold; color: #334155;">${m.stock_deposito} amp</td>
+      </tr>
+    `;
+  });
+
+  const ventana = window.open("", "_blank");
+  ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="utf-8">
+      <title>Rendicion y Balance Diario Opioides - HCM</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 25px; color: #0f172a; }
+        .header { border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .title { font-size: 18px; font-weight: 900; color: #0369a1; text-transform: uppercase; margin: 0; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .info-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 11px; display: flex; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 25px; }
+        th { background-color: #0f172a; color: white; padding: 8px 10px; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+        .signatures { display: flex; justify-content: space-around; margin-top: 50px; page-break-inside: avoid; }
+        .sign-line { width: 220px; border-top: 1px dashed #475569; text-align: center; padding-top: 6px; font-size: 10px; font-weight: bold; color: #334155; }
+        @media print {
+          body { margin: 10mm; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <h1 class="title">Hospital Central de Mendoza - HCM</h1>
+          <div class="subtitle">Servicio de Anestesiología y Farmacia Central | Acta de Rendición Diaria de Estupefacientes</div>
+        </div>
+        <div style="text-align: right; font-size: 10px; color: #64748b;">
+          Generado: ${new Date().toLocaleString('es-AR')}<br>
+          Operador: <strong>${currentUser ? currentUser.nombre_completo : 'Sistema'}</strong>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div><strong>Fecha de Guardia / Rendición:</strong> ${f_formateada} (${fechaStr})</div>
+        <div><strong>Trazabilidad:</strong> Cuaderno Digital Validado</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align: left;">Medicamento / Presentación</th>
+            <th>Pedido Quirófano</th>
+            <th>Devuelto</th>
+            <th>Consumo Neto Anestesia</th>
+            <th>Despachado Farmacia</th>
+            <th>Diferencia / Balance</th>
+            <th style="text-align: right;">Stock en Depósito</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHTML}
+        </tbody>
+      </table>
+
+      <div class="signatures">
+        <div class="sign-line">
+          Firma y Sello<br>
+          <strong>Técnico de Anestesia de Guardia</strong>
+        </div>
+        <div class="sign-line">
+          Firma y Sello<br>
+          <strong>Farmacéutico Responsable HCM</strong>
+        </div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      </script>
+    </body>
+    </html>
+  `);
+  ventana.document.close();
+}
